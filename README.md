@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="custom_components/quarter_hour_power/brand/icon.png" alt="Quarter Hour Power" width="180">
+  <img
+    src="https://raw.githubusercontent.com/vandecook/quarter-hour-power/main/custom_components/quarter_hour_power/brand/icon.png"
+    width="128"
+    alt="Quarter Hour Power"
+  >
 </p>
 
 # Quarter Hour Power
