@@ -1,0 +1,33 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Quarter Hour Power",
+        "description": "Select a cumulative grid-import energy sensor. The house-consumption energy sensor is optional; without it only grid 15-minute power and the monthly grid peak are calculated. An optional prefix is prepended to the names of all entities created by this integration.",
+        "data": {
+          "grid_energy_entity": "Grid import energy",
+          "house_energy_entity": "House consumption energy (optional)",
+          "name_prefix": "Entity name prefix"
+        }
+      }
+    },
+    "error": {
+      "entity_not_found": "The selected entity was not found.",
+      "invalid_energy_unit": "Select a sensor using Wh, kWh or MWh.",
+      "invalid_state_class": "Select a cumulative sensor with state class total or total_increasing."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Quarter Hour Power options",
+        "description": "Change the grid source, optional house source and entity-name prefix. Without a house source, house, reduction and reduction-percentage calculations are disabled. Changing a source keeps applicable monthly peaks, discards the current interval baseline, and starts a fresh baseline at the next quarter-hour boundary.",
+        "data": {
+          "grid_energy_entity": "Grid import energy",
+          "house_energy_entity": "House consumption energy (optional)",
+          "name_prefix": "Entity name prefix"
+        }
+      }
+    }
+  }
+}

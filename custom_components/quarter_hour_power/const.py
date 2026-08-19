@@ -1,0 +1,9 @@
+DOMAIN = "quarter_hour_power"
+CONF_GRID_ENERGY = "grid_energy_entity"
+CONF_HOUSE_ENERGY = "house_energy_entity"
+CONF_NAME_PREFIX = "name_prefix"
+INTERVAL_MINUTES = 15
+INTERVAL_HOURS = INTERVAL_MINUTES / 60
+MAX_INTERVAL_DRIFT_SECONDS = 90
+STORE_VERSION = 1
+STORE_KEY_PREFIX = f"{DOMAIN}.state"
