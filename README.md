@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="custom_components/quarter_hour_power/brand/icon.png" alt="Quarter Hour Power" width="180">
+</p>
+
 # Quarter Hour Power
 
 Home Assistant custom integration for fixed 15-minute power-demand analysis from cumulative energy sensors.
