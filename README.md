@@ -10,6 +10,14 @@ Home Assistant custom integration for fixed 15-minute power-demand analysis from
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://www.hacs.xyz/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+
+## Requirements
+
+- Minimum supported Home Assistant version: **2025.1.0**
+- Recommended: latest stable Home Assistant release
+
+Older Home Assistant versions are not part of the supported compatibility target.
+
 ## What it does
 
 Quarter Hour Power calculates fixed quarter-hour average power values from cumulative energy meters. It is intended for demand/peak analysis where 15-minute intervals are relevant.
