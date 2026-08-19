@@ -76,6 +76,12 @@ class AnalysisState:
     configured_house_energy: str | None = None
     grid_source_changed_at: str | None = None
     house_source_changed_at: str | None = None
+    last_interval_status: str = "baseline_missing"
+    last_valid_interval: str | None = None
+    last_grid_delta_kwh: float | None = None
+    last_house_delta_kwh: float | None = None
+    last_discard_reason: str | None = None
+    history_recovery_status: str = "not_needed"
 
 
 class QuarterHourPowerCoordinator:
@@ -110,9 +116,7 @@ class QuarterHourPowerCoordinator:
         # Version 0.1.4 stores the configured source entities in the state.
         # When upgrading from an older version those fields are missing; treat
         # the current entities as the existing sources so a normal upgrade does
-        # not unnecessarily discard an otherwise valid baseline. In 0.1.5,
-        # configured_house_energy=None is a valid persisted value, so check for
-        # key presence rather than checking the value itself.
+        # not unnecessarily discard an otherwise valid baseline.
         if "configured_grid_energy" not in stored_keys:
             self.state.configured_grid_energy = self.grid_entity
         if "configured_house_energy" not in stored_keys:
@@ -127,7 +131,11 @@ class QuarterHourPowerCoordinator:
         if self.state.peak_month != current_month:
             restored = await self._async_restore_from_recorder(now)
             if not restored:
+                if self.state.history_recovery_status != "failed":
+                    self.state.history_recovery_status = "no_history_found"
                 self._reset_month(current_month)
+        else:
+            self.state.history_recovery_status = "not_needed"
 
         # Source changes intentionally preserve the current month's peaks, but
         # the old source baseline/current interval must never be mixed with the
@@ -202,6 +210,10 @@ class QuarterHourPowerCoordinator:
         self.state.reduction_percent = None
         self.state.interval_start = None
         self.state.interval_end = None
+        self.state.last_grid_delta_kwh = None
+        self.state.last_house_delta_kwh = None
+        self.state.last_interval_status = "source_changed"
+        self.state.last_discard_reason = "source_changed"
         return True
 
     def _energy_kwh(self, entity_id: str | None) -> float | None:
@@ -243,16 +255,11 @@ class QuarterHourPowerCoordinator:
         end_utc = dt_util.as_utc(now)
         history_fields = HISTORY_FIELD_OBJECT_IDS
         if self.house_entity is None:
-            # In grid-only mode restore only values that are meaningful without
-            # a house-consumption source. Historical house/reduction values may
-            # still exist in Recorder from an earlier configuration, but must
-            # not become active state for a grid-only instance.
             history_fields = {
                 field: object_id
                 for field, object_id in HISTORY_FIELD_OBJECT_IDS.items()
                 if field in {"grid_power_kw", "grid_peak_kw"}
             }
-
         history_field_entities = {
             field: self._history_entity_id(object_id)
             for field, object_id in history_fields.items()
@@ -276,6 +283,7 @@ class QuarterHourPowerCoordinator:
                 )
             )
         except Exception:  # Recorder unavailable/corrupt must not block setup.
+            self.state.history_recovery_status = "failed"
             return False
 
         restored_any = False
@@ -313,8 +321,10 @@ class QuarterHourPowerCoordinator:
                 self.state.interval_end = interval_end
 
         if not restored_any:
+            self.state.history_recovery_status = "no_history_found"
             return False
 
+        self.state.history_recovery_status = "restored"
         self.state.peak_month = now.strftime("%Y-%m")
         self.state.restored_from_history = True
         self.state.restored_at = now.isoformat()
@@ -345,8 +355,17 @@ class QuarterHourPowerCoordinator:
     async def _async_quarter_hour(self, now: datetime) -> None:
         grid = self._energy_kwh(self.grid_entity)
         house = self._energy_kwh(self.house_entity) if self.house_entity else None
-        if grid is None or (self.house_entity is not None and house is None):
+        if grid is None:
             self.state.invalid_intervals += 1
+            self.state.last_interval_status = "invalid_grid_source"
+            self.state.last_discard_reason = "invalid_grid_source"
+            await self._store.async_save(asdict(self.state))
+            self._notify()
+            return
+        if self.house_entity is not None and house is None:
+            self.state.invalid_intervals += 1
+            self.state.last_interval_status = "invalid_house_source"
+            self.state.last_discard_reason = "invalid_house_source"
             await self._store.async_save(asdict(self.state))
             self._notify()
             return
@@ -358,6 +377,10 @@ class QuarterHourPowerCoordinator:
 
         if self.state.last_timestamp is None:
             self._set_baseline(now, grid, house)
+            self.state.last_interval_status = "baseline_missing"
+            self.state.last_discard_reason = "baseline_missing"
+            self.state.last_grid_delta_kwh = None
+            self.state.last_house_delta_kwh = None
             await self._store.async_save(asdict(self.state))
             self._notify()
             return
@@ -365,17 +388,42 @@ class QuarterHourPowerCoordinator:
         previous_time = datetime.fromisoformat(self.state.last_timestamp)
         elapsed = (now - previous_time).total_seconds()
         expected = INTERVAL_MINUTES * 60
-        valid_elapsed = abs(elapsed - expected) <= MAX_INTERVAL_DRIFT_SECONDS
 
         delta_grid = grid - (self.state.last_grid_energy_kwh or 0)
         delta_house = None
         if self.house_entity is not None:
             delta_house = house - (self.state.last_house_energy_kwh or 0)
+        self.state.last_grid_delta_kwh = round(delta_grid, 6)
+        self.state.last_house_delta_kwh = round(delta_house, 6) if delta_house is not None else None
 
-        valid_delta = delta_grid >= 0 and (delta_house is None or delta_house >= 0)
-
-        if not valid_elapsed or not valid_delta:
+        if elapsed < expected - MAX_INTERVAL_DRIFT_SECONDS:
             self.state.invalid_intervals += 1
+            self.state.last_interval_status = "interval_too_short"
+            self.state.last_discard_reason = "interval_too_short"
+            self._set_baseline(now, grid, house)
+            await self._store.async_save(asdict(self.state))
+            self._notify()
+            return
+        if elapsed > expected + MAX_INTERVAL_DRIFT_SECONDS:
+            self.state.invalid_intervals += 1
+            self.state.last_interval_status = "interval_too_long"
+            self.state.last_discard_reason = "interval_too_long"
+            self._set_baseline(now, grid, house)
+            await self._store.async_save(asdict(self.state))
+            self._notify()
+            return
+        if delta_grid < 0:
+            self.state.invalid_intervals += 1
+            self.state.last_interval_status = "negative_grid_delta"
+            self.state.last_discard_reason = "negative_grid_delta"
+            self._set_baseline(now, grid, house)
+            await self._store.async_save(asdict(self.state))
+            self._notify()
+            return
+        if delta_house is not None and delta_house < 0:
+            self.state.invalid_intervals += 1
+            self.state.last_interval_status = "negative_house_delta"
+            self.state.last_discard_reason = "negative_house_delta"
             self._set_baseline(now, grid, house)
             await self._store.async_save(asdict(self.state))
             self._notify()
@@ -398,6 +446,9 @@ class QuarterHourPowerCoordinator:
         self.state.reduction_percent = reduction_percent
         self.state.interval_start = previous_time.isoformat()
         self.state.interval_end = now.isoformat()
+        self.state.last_valid_interval = now.isoformat()
+        self.state.last_interval_status = "ok"
+        self.state.last_discard_reason = None
 
         if self.state.grid_peak_kw is None or grid_kw > self.state.grid_peak_kw:
             self.state.grid_peak_kw = grid_kw

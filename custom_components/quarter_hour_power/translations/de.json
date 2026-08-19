@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Quarter Hour Power",
-        "description": "Kumulativen Energiesensor für den Netzbezug auswählen. Der Hausverbrauch-Energiesensor ist optional; ohne ihn werden nur die 15-Minuten-Netzleistung und der monatliche Netzpeak berechnet. Ein optionaler Prefix wird den Namen aller erzeugten Entitäten vorangestellt.",
+        "description": "Den kumulativen Netzbezugs-Energiesensor und optional einen kumulativen Hausverbrauchs-Energiesensor auswählen. Ohne Hausquelle werden nur die 15-Minuten-Netzleistung und der monatliche Netzpeak berechnet. Ein optionaler Prefix wird den Namen aller von der Integration erzeugten Entitäten vorangestellt.",
         "data": {
           "grid_energy_entity": "Netzbezug Energie",
           "house_energy_entity": "Hausverbrauch Energie (optional)",
@@ -21,7 +21,7 @@
     "step": {
       "init": {
         "title": "Quarter Hour Power Optionen",
-        "description": "Netz-Energiequelle, optionale Haus-Energiequelle und Entitäts-Prefix ändern. Ohne Hausquelle sind Haus-, Reduktions- und Prozentberechnungen deaktiviert. Bei einem Quellenwechsel bleiben die jeweils anwendbaren Monatspeaks erhalten; die laufende Viertelstunden-Basis wird verworfen und an der nächsten Viertelstundengrenze neu gesetzt.",
+        "description": "Netz-Energiequelle, optionale Haus-Energiequelle und optionalen Entitäts-Prefix ändern. Ohne Hausquelle sind Haus-, Netzreduktions- und Prozentberechnungen deaktiviert. Bei einem Quellenwechsel bleiben die Monatspeaks erhalten; die laufende Viertelstunden-Basis wird verworfen und an der nächsten Viertelstundengrenze neu gesetzt.",
         "data": {
           "grid_energy_entity": "Netzbezug Energie",
           "house_energy_entity": "Hausverbrauch Energie (optional)",

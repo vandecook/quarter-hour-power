@@ -9,8 +9,8 @@
     "recorder"
   ],
   "documentation": "https://github.com/vandecook/quarter-hour-power",
-  "integration_type": "helper",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/vandecook/quarter-hour-power/issues",
-  "version": "0.1.7"
+  "version": "0.1.12"
 }

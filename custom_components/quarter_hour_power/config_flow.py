@@ -56,11 +56,6 @@ class QuarterHourPowerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOUSE_ENERGY] = house_error
 
             if not errors:
-                # Keep the source pair unique. Grid-only entries use an empty
-                # house component, while full entries remain compatible with
-                # the unique-id scheme used by earlier versions.
-                await self.async_set_unique_id(f"{grid}|{house or ''}")
-                self._abort_if_unique_id_configured()
                 prefix = user_input.get(CONF_NAME_PREFIX, "").strip()
                 data = {
                     CONF_GRID_ENERGY: grid,
@@ -130,24 +125,20 @@ class QuarterHourPowerOptionsFlow(config_entries.OptionsFlow):
             CONF_NAME_PREFIX,
             self.config_entry.data.get(CONF_NAME_PREFIX, ""),
         )
-
         schema_fields: dict = {
             vol.Required(CONF_GRID_ENERGY, default=current_grid): selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
             ),
         }
         if current_house:
-            schema_fields[
-                vol.Optional(CONF_HOUSE_ENERGY, default=current_house)
-            ] = selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor"))
+            schema_fields[vol.Optional(CONF_HOUSE_ENERGY, default=current_house)] = selector.EntitySelector(
+                selector.EntitySelectorConfig(domain="sensor")
+            )
         else:
             schema_fields[vol.Optional(CONF_HOUSE_ENERGY)] = selector.EntitySelector(
                 selector.EntitySelectorConfig(domain="sensor")
             )
         schema_fields[vol.Optional(CONF_NAME_PREFIX, default=current_prefix)] = selector.TextSelector()
-
         return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema_fields),
-            errors=errors,
+            step_id="init", data_schema=vol.Schema(schema_fields), errors=errors
         )
