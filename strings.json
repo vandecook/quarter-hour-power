@@ -1,0 +1,139 @@
+{
+  "title": "Heat Pump Performance",
+  "config": {
+    "step": {
+      "user": {
+        "title": "Heat pump system",
+        "description": "Select the source entities. Sensor, input_number and number entities are accepted even without Home Assistant energy metadata.",
+        "data": {
+          "name": "System name / prefix",
+          "system_type": "System type",
+          "thermal_energy": "Thermal energy *",
+          "electrical_energy": "Electrical energy - complete system *",
+          "electrical_power": "Electrical power - complete system",
+          "aux_energy": "Electrical energy - controls and ventilation",
+          "aux_power": "Electrical power - controls and ventilation",
+          "heating_active": "Heating active",
+          "dhw_active": "Domestic hot water active"
+        }
+      },
+      "units": {
+        "title": "Units",
+        "description": "Explicitly define input units. This also supports sensors that have no unit in Home Assistant.",
+        "data": {
+          "thermal_energy_unit": "Thermal energy unit",
+          "electrical_energy_unit": "Electrical energy unit",
+          "electrical_power_unit": "Electrical power unit",
+          "aux_energy_unit": "Auxiliary energy unit",
+          "aux_power_unit": "Auxiliary power unit"
+        }
+      },
+      "periods": {
+        "title": "Periods",
+        "description": "The yearly start selection is used only for the first setup of this config entry. Future years always start on January 1.",
+        "data": {
+          "initial_year_mode": "Initial yearly start",
+          "initial_year_date": "Partial-year start date",
+          "heating_season_enabled": "Enable heating-season working ratio",
+          "heating_season_start": "Heating season start (MM-DD)",
+          "heating_season_end": "Heating season end (MM-DD)",
+          "max_thermal_power_kw": "Maximum thermal power (kW)",
+          "thermal_safety_factor": "Safety factor",
+          "thermal_resolution_kwh": "Meter resolution / tolerance (kWh)"
+        }
+      }
+    },
+    "error": {
+      "date_required": "Select a date for partial year.",
+      "invalid_mm_dd": "Use MM-DD, for example 10-01."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Heat Pump Performance inputs",
+        "description": "Change the source entities. Sensor, input_number and number entities can be used for numeric inputs. Changing an energy source rebases that input and does not reset already accumulated period values.",
+        "data": {
+          "name": "System name / prefix",
+          "system_type": "System type",
+          "thermal_energy": "Thermal energy *",
+          "electrical_energy": "Electrical energy - complete system *",
+          "electrical_power": "Electrical power - complete system",
+          "aux_energy": "Electrical energy - controls and ventilation",
+          "aux_power": "Electrical power - controls and ventilation",
+          "heating_active": "Heating active",
+          "dhw_active": "Domestic hot water active"
+        }
+      },
+      "units": {
+        "title": "Input units",
+        "description": "Define units for the currently selected input entities.",
+        "data": {
+          "thermal_energy_unit": "Thermal energy unit",
+          "electrical_energy_unit": "Electrical energy unit",
+          "electrical_power_unit": "Electrical power unit",
+          "aux_energy_unit": "Auxiliary energy unit",
+          "aux_power_unit": "Auxiliary power unit"
+        }
+      },
+      "periods": {
+        "title": "Heat Pump Performance options",
+        "description": "The initial yearly start cannot be changed after first setup.",
+        "data": {
+          "heating_season_enabled": "Enable heating-season working ratio",
+          "heating_season_start": "Heating season start (MM-DD)",
+          "heating_season_end": "Heating season end (MM-DD)",
+          "max_thermal_power_kw": "Maximum thermal power (kW)",
+          "thermal_safety_factor": "Safety factor",
+          "thermal_resolution_kwh": "Meter resolution / tolerance (kWh)"
+        }
+      }
+    }
+  },
+  "selector": {
+    "system_type": {
+      "options": {
+        "hp": "Heat pump / compact system",
+        "dhw_hp": "Domestic hot water heat pump"
+      }
+    },
+    "year_mode": {
+      "options": {
+        "from_now": "Start from now",
+        "full_year": "Full year (January 1, if Recorder history is available)",
+        "partial_year": "Partial year from selected date"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "working_ratio": {
+        "name": "Arbeitszahl"
+      },
+      "working_ratio_daily": {
+        "name": "Arbeitszahl täglich"
+      },
+      "working_ratio_monthly": {
+        "name": "Arbeitszahl monatlich"
+      },
+      "working_ratio_yearly": {
+        "name": "Jahresarbeitszahl"
+      },
+      "working_ratio_heating_season": {
+        "name": "Heizperioden-Arbeitszahl"
+      },
+      "working_ratio_lifetime": {
+        "name": "Arbeitszahl Gesamtzeit"
+      },
+      "thermal_energy": {
+        "name": "Wärmeenergie"
+      },
+      "electrical_energy": {
+        "name": "Elektrische Energie"
+      },
+      "input_diagnostics": {
+        "name": "Eingangsdiagnose"
+      }
+    }
+  }
+}
